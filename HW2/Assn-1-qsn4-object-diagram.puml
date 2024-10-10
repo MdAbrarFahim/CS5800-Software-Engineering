@@ -1,0 +1,43 @@
+@startuml
+
+object "Folder_php_demo1:Folder" as fphp1 {
+    name = "php_demo1"
+}
+
+object "Folder_SourceFiles:Folder" as fs {
+    name = "Source Files"
+}
+
+object "Folder_phalcon:Folder" as fphalcon {
+    name = ".phalcon"
+}
+
+object "Folder_cache:Folder" as fcache {
+    name = "cache"
+}
+
+object "Folder_public:Folder" as fpublic {
+    name = "public"
+}
+
+object "File_htaccess:File" as fht {
+    name = ".htaccess"
+}
+
+object "File_htrouter:File" as fhr {
+    name = ".htrouter.php"
+}
+
+object "File_index:File" as findex {
+    name = "index.html"
+}
+
+fphp1 --> fs : contains
+fs --> fphalcon : contains
+fs --> fcache : contains
+fs --> fpublic : contains
+fpublic --> fht : contains
+fpublic --> fhr : contains
+fpublic --> findex : contains
+
+@enduml

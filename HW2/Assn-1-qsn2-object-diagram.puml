@@ -1,0 +1,23 @@
+@startuml
+
+object "MyOwnShip:Ship" as s1 {
+    name = "BNS Bangabandhu"
+    yearBuilt = "1998"
+}
+
+object "LuxuryCruise:CruiseShip" as cs1 {
+    name = "BNS Shadhinota"
+    builtYear = "2012"
+    maxPassengers = 33000
+}
+
+object "HeavyCargo:CargoShip" as crs1 {
+    name = "BNS Bijoy"
+    builtYear = "1981"
+    cargoCapacity = 180
+}
+
+s1 --> cs1 : inherits
+s1 --> crs1 : inherits
+
+@enduml

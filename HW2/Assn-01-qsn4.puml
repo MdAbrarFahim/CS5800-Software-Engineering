@@ -1,0 +1,23 @@
+@startuml
+class File {
+  -name : String
+  +File(name : String)
+  +getName() : String
+  +print() : void
+}
+
+class Folder {
+  -name : String
+  -subFolders : List<Folder>
+  -files : List<File>
+  +Folder(name : String)
+  +addFile(file : File) : void
+  +addSubFolder(folder : Folder) : void
+  +removeSubFolder(folderName : String) : void
+  +removeFile(fileName : String) : void
+  +print() : void
+}
+
+Folder "1" *-- "0..*" File : contains
+Folder "1" *-- "0..*" Folder : contains sub-folder
+@enduml

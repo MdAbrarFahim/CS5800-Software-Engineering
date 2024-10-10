@@ -1,0 +1,22 @@
+@startuml
+
+object "Instructor1:Instructor" as i1 {
+    firstName = "Nima"
+    lastName = "Davarpanah"
+    officeNumber = "3-2636"
+}
+
+object "Textbook1:Textbook" as t1 {
+    title = "Clean Code"
+    author = "Robert C. Martin"
+    publisher = "Prentice Hall"
+}
+
+object "Course1:Course" as c1 {
+    courseName = "Software Engineering"
+}
+
+c1 --> i1 : has a
+c1 --> t1 : has a
+
+@enduml
