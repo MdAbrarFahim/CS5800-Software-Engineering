@@ -27,6 +27,6 @@ public class Pizza {
         for (String topping : toppings) {
             result.append("- ").append(topping).append("\n");
         }
-        return result.toString().trim();  // Trim any trailing newline for exact match
+        return result.toString().trim();
     }
 }
