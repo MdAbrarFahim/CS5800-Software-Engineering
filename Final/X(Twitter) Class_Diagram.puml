@@ -1,0 +1,151 @@
+@startuml
+
+' User-side Components
+package "Client Side" {
+
+  class UserInterface {
+    +login(username: String, password: String): boolean
+    +postTweet(content: String): void
+    +followUser(userId: UUID): void
+    +searchTweets(query: String): List<Tweet>
+    +viewTimeline(): List<Tweet>
+  }
+
+  class User {
+    -userId: UUID
+    -username: String
+    -email: String
+    -followers: Set<User>
+    -following: Set<User>
+  }
+
+  class Tweet {
+    -tweetId: UUID
+    -authorId: UUID
+    -content: String
+    -createdAt: Timestamp
+    -likes: int
+    -retweets: int
+  }
+
+  class Media {
+    -mediaId: UUID
+    -url: String
+    -type: MediaType
+  }
+
+  enum MediaType {
+    IMAGE
+    VIDEO
+    GIF
+  }
+
+  class Notification {
+    -notificationId: UUID
+    -type: NotificationType
+    -content: String
+  }
+
+  enum NotificationType {
+    LIKE
+    RETWEET
+    REPLY
+    MENTION
+  }
+}
+
+' Server-side Components
+package "Server Side" {
+  class APIGateway {
+    +handleRequest(request: Request): Response
+    +routeRequest(request: Request): void
+  }
+
+  class AuthenticationService {
+    +authenticate(credentials: Credentials): boolean
+  }
+
+  class UserService {
+    +createUser(userData: UserData): User
+    +getUserById(userId: UUID): User
+    +updateUser(userId: UUID, userData: UserData): User
+  }
+
+  class TweetService {
+    +createTweet(tweetData: TweetData): Tweet
+    +getTweetById(tweetId: UUID): Tweet
+    +likeTweet(tweetId: UUID, userId: UUID): void
+  }
+
+  interface SearchService {
+    +searchTweets(query: String): List<Tweet>
+    +searchUsers(query: String): List<User>
+  }
+
+  class FanOutService {
+    +distributeTweet(tweet: Tweet): void
+    +getFollowers(userId: UUID): Set<User>
+  }
+
+  class NotificationService {
+    +sendNotification(userId: UUID, notification: Notification): void
+  }
+
+  class MediaService {
+    +uploadMedia(media: Media): boolean
+    +getMediaById(mediaId: UUID): Media
+  }
+
+  class TimelineService {
+    +getUserTimeline(userId: UUID): List<Tweet>
+    +getHomeTimeline(userId: UUID): List<Tweet>
+  }
+
+  interface CacheService {
+    +get(key: String): Object
+    +set(key: String, value: Object, expiration: Duration): void
+  }
+
+  class DistributedCache {
+    -nodes: List<CacheNode>
+  }
+
+  interface DataStore {
+    +save(entity: Object): void
+    +find(id: UUID): Object
+  }
+
+  class SQLDatabase {
+  }
+}
+
+' Relationships
+UserInterface "1" -- "1" User : interacts with
+UserInterface --> APIGateway : sends requests
+APIGateway --> AuthenticationService : authenticates
+APIGateway --> UserService : manages users
+APIGateway --> TweetService : manages tweets
+APIGateway --> SearchService : performs searches
+APIGateway --> TimelineService : retrieves timelines
+APIGateway --> NotificationService : sends notifications
+APIGateway --> MediaService : handles media
+
+User "1" -- "0..*" Tweet : posts
+Tweet "1" -- "0..*" Media : contains
+User "1" -- "0..*" Notification : receives
+
+TweetService --> FanOutService : distributes tweets
+FanOutService --> CacheService : caches data
+TimelineService --> CacheService : retrieves cached timelines
+
+UserService --> DataStore : persists data
+TweetService --> DataStore : persists data
+MediaService --> DataStore : persists data
+
+CacheService <|.. DistributedCache
+DataStore <|.. SQLDatabase
+
+Media "1" -- "1" MediaType : has type
+Notification "1" -- "1" NotificationType : has type
+
+@enduml

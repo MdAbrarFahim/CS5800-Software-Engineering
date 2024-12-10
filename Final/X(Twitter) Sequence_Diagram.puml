@@ -1,0 +1,67 @@
+@startuml
+title X-Twitter Interaction Sequence
+
+actor User
+
+participant "User Interface" as UI
+participant "API Gateway" as API
+participant "Authentication\nService" as AUTH
+participant "Tweet Service" as TWEET
+participant "Engagement\nService" as ENGAGE
+participant "Notification\nService" as NOTIFY
+database "Database" as DB
+
+User -> UI: Open X-Twitter
+UI -> API: Request Authentication
+API -> AUTH: Validate Session
+AUTH --> API: Return Auth Token
+API --> UI: Display Timeline
+
+alt Compose Tweet
+    User -> UI: Create New Tweet
+    UI -> API: Submit Tweet
+    API -> TWEET: Validate Tweet Content
+    alt Content Valid
+        TWEET -> DB: Store Tweet
+        TWEET -> NOTIFY: Notify Mentioned Users
+        NOTIFY --> UI: Update Notifications
+    else Content Invalid
+        TWEET --> UI: Display Error Message
+    end
+else Like Tweet
+    User -> UI: Like Tweet
+    UI -> API: Send Like Action
+    API -> ENGAGE: Process Like
+    ENGAGE -> DB: Update Like Count
+else Retweet
+    User -> UI: Retweet
+    UI -> API: Send Retweet Action
+    API -> ENGAGE: Process Retweet
+    ENGAGE -> DB: Update Retweet Count
+    ENGAGE -> NOTIFY: Notify Original Author
+else Reply
+    User -> UI: Reply to Tweet
+    UI -> API: Submit Reply
+    API -> TWEET: Validate Reply Content
+    alt Content Valid
+        TWEET -> DB: Store Reply
+        TWEET -> NOTIFY: Notify Original Author
+    else Content Invalid
+        TWEET --> UI: Display Error Message
+    end
+else Mention
+    User -> UI: Mention User in Tweet
+    UI -> API: Submit Tweet with Mention
+    API -> TWEET: Validate Tweet Content
+    alt Content Valid
+        TWEET -> DB: Store Tweet
+        TWEET -> NOTIFY: Notify Mentioned User
+    else Content Invalid
+        TWEET --> UI: Display Error Message
+    end
+end
+
+API --> UI: Update Timeline
+UI --> User: Display Updated Content
+
+@enduml
