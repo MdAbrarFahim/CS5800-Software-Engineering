@@ -1,0 +1,156 @@
+@startuml
+@startuml
+
+package "Client Side" {
+  class AuthenticationInterface {
+    +login(username: String, password: String): boolean
+    +logout(): void
+  }
+
+  class UserInterface {
+    +postTweet(content: String): void
+    +likeTweet(tweetId: UUID): void
+    +retweet(tweetId: UUID): void
+    +reply(tweetId: UUID, content: String): void
+    +mention(username: String, content: String): void
+    +viewTimeline(): List<Tweet>
+    +refreshTimeline(): void
+  }
+
+  class EngagementInterface {
+    +like(tweetId: UUID): void
+    +retweet(tweetId: UUID): void
+    +reply(tweetId: UUID, content: String): void
+  }
+
+  class NotificationInterface {
+    +pollNotifications(): List<Notification>
+    +displayNotifications(notifications: List<Notification>): void
+  }
+
+  class User {
+    -userId: UUID
+    -username: String
+    -email: String
+    -followers: Set<User>
+    -following: Set<User>
+  }
+
+  class Tweet {
+    -tweetId: UUID
+    -authorId: UUID
+    -content: String
+    -createdAt: Timestamp
+    -likes: int
+    -retweets: int
+  }
+
+  class Notification {
+    -notificationId: UUID
+    -type: NotificationType
+    -content: String
+  }
+
+  enum NotificationType {
+    LIKE, RETWEET, REPLY, MENTION
+  }
+}
+
+package "Server Side" {
+  class APIGateway {
+    +handleRequest(request: Request): Response
+    +routeRequest(request: Request): void
+  }
+
+  class AuthenticationService {
+    +authenticate(credentials: Credentials): AuthToken
+    +validateToken(token: AuthToken): boolean
+  }
+
+  class UserService {
+    +getUserById(userId: UUID): User
+    +updateUser(userId: UUID, userData: UserData): User
+  }
+
+  class TweetService {
+    +createTweet(tweetData: TweetData): Tweet
+    +getTweetById(tweetId: UUID): Tweet
+    +validateContent(content: String): boolean
+  }
+
+  class EngagementService {
+    +likeTweet(tweetId: UUID, userId: UUID): void
+    +retweet(tweetId: UUID, userId: UUID): void
+    +reply(tweetId: UUID, userId: UUID, content: String): void
+  }
+
+  class FanOutService {
+    +distributeTweet(tweet: Tweet): void
+    +getFollowers(userId: UUID): Set<User>
+  }
+
+  class NotificationService {
+    +generateNotifications(action: Action, tweet: Tweet): void
+    +getNotificationsForUser(userId: UUID): List<Notification>
+  }
+
+  class TimelineService {
+    +getUserTimeline(userId: UUID): List<Tweet>
+    +getHomeTimeline(userId: UUID): List<Tweet>
+    +updateTimeline(userId: UUID, tweet: Tweet): void
+  }
+
+  interface CacheService {
+    +get(key: String): Object
+    +set(key: String, value: Object, expiration: Duration): void
+  }
+
+  interface DataStore {
+    +save(entity: Object): void
+    +find(id: UUID): Object
+  }
+
+  class AuthDatabase {}
+
+  class TweetDatabase {}
+}
+
+' Relationships remain the same as in the previous diagram
+
+AuthenticationInterface --> APIGateway : sends auth requests
+UserInterface --> APIGateway : sends requests
+EngagementInterface --> APIGateway : sends engagement requests
+NotificationInterface --> APIGateway : polls for notifications
+
+APIGateway --> AuthenticationService : authenticates
+APIGateway --> UserService : manages users
+APIGateway --> TweetService : manages tweets
+APIGateway --> EngagementService : handles engagements
+APIGateway --> TimelineService : retrieves timelines
+APIGateway --> NotificationService : handles notifications
+
+User "1" -- "0..*" Tweet : posts
+User "1" -- "0..*" Notification : receives
+User --> AuthenticationInterface : uses
+User --> UserInterface : interacts with
+User --> EngagementInterface : performs actions
+User --> NotificationInterface : receives notifications
+
+NotificationInterface --> Notification : manages
+
+TweetService --> FanOutService : distributes tweets
+FanOutService --> TimelineService : updates timelines
+TimelineService --> CacheService : caches timelines
+
+AuthenticationService --> AuthDatabase : persists auth data
+UserService --> TweetDatabase : persists user data
+TweetService --> TweetDatabase : persists tweet data
+EngagementService --> TweetDatabase : updates engagement data
+
+DataStore <|.. AuthDatabase
+DataStore <|.. TweetDatabase
+
+Notification "1" -- "1" NotificationType : has type
+
+@enduml
+

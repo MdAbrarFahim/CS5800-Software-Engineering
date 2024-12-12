@@ -1,0 +1,90 @@
+@startuml
+title X(Twitter) - Front-End User Interaction Flow
+
+|Authentication Interface|
+start
+:Launch X-Twitter\n    Application;
+if (        User \nAuthenticated?) then (no)
+  :Display Login Screen;
+  :Enter Credentials;
+  :Submit Login Request;
+  note right: Send to\nAuthentication\nService
+  if (Login Successful?) then (yes)
+    :      Store\nAuthentication\n      Token;
+    :Proceed to User\n   Dashboard;
+  else (no)
+    :      Show\nAuthentication\n       Error;
+    stop
+  endif
+else (yes)
+  :Access User\n Dashboard;
+endif
+
+|User Interface & Composition|
+:Request User\n        Data\n   and Timeline;
+note right: Send to User\n Service & \nTimeline Service
+:Display Home\n   Timeline;
+fork
+  :Initiate Tweet\n Composer;
+  :Enter Tweet Content;
+  if (Content Meets\n Guidelines?) then (yes)
+    :Submit Tweet;
+    note right:Send to\nTweet Service
+    :   Wait for\nConfirmation;
+    :Update Local\n Timeline;
+  else (no)
+    :Display Content\nValidation Error;
+    stop
+  endif
+
+|Engagement Interface|
+fork again
+  :Select Tweet \nInteraction;
+  switch (Interaction Type)
+  case (Like)
+    :Send Like Request;
+    note right: Send to \nEngagement\nService
+    :Update Like Count\n (Optimistic);
+  case (Retweet)
+    :Send Retweet \nRequest;
+    note right: Send to\nEngagement \nService
+    :Update Retweet \nCount (Optimistic);
+  case (Reply)
+    :Open Reply Composer;
+    :Enter Reply Content;
+    if (Reply Validates?) then (yes)
+      :Submit Reply;
+      note right: Send to \nTweet Service
+      :Wait for Confirmation;
+      :Update Local Timeline;
+    else (no)
+      :Show \nValidation \nError;
+      stop
+    endif
+  case (Mention)
+    :Trigger \nMention \nMechanism;
+    :Enter\nTweet with \nMention;
+    if (Mention Validates?) then (yes)
+      :Submit\nTweet with \nMention;
+      note right: Send to \nTweet Service
+      :Wait for Confirmation;
+      :Update Local Timeline;
+    else (no)
+      :Display Validation \nError;
+      stop
+    endif
+  endswitch
+end fork
+
+|Notification Interface|
+:Poll for \nNew \nNotifications;
+note right: Request from \nNotification \nService
+:Display \nNew \nNotifications;
+
+|User Interface & Composition|
+:Periodically \nRefresh Timeline;
+note right: Request from \nTimeline Service
+:Display \nUpdated Content;
+
+stop
+@enduml

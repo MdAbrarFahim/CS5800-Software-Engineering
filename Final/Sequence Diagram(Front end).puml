@@ -1,0 +1,52 @@
+@startuml
+actor User
+participant "Authentication Interface" as AuthUI
+participant "User Interface & Composition" as UI
+participant "Engagement Interface" as EngageUI
+participant "Notification Interface" as NotifyUI
+participant "Authentication Service" as Auth
+participant "User Service" as UserSvc
+participant "Tweet Service" as Tweet
+participant "Timeline Service" as Timeline
+participant "Engagement Service" as Engage
+participant "Notification Service" as Notify
+
+User -> AuthUI: Launch application
+AuthUI -> Auth: Check authentication
+alt User not authenticated
+    Auth --> AuthUI: Request login
+    User -> AuthUI: Enter credentials
+    AuthUI -> Auth: Submit login request
+    Auth --> AuthUI: Return auth token
+    AuthUI -> UI: Proceed to dashboard
+else User authenticated
+    AuthUI -> UI: Access dashboard
+end
+
+UI -> UserSvc: Request user data
+UserSvc --> UI: Return user data
+UI -> Timeline: Request timeline
+Timeline --> UI: Return timeline data
+UI -> UI: Display home timeline
+
+alt Post Tweet
+    User -> UI: Compose tweet
+    UI -> UI: Validate content
+    UI -> Tweet: Submit tweet
+    Tweet --> UI: Confirm tweet posted
+    UI -> UI: Update local timeline
+else Engage with Tweet
+    User -> EngageUI: Select interaction (Like/Retweet/Reply/Mention)
+    EngageUI -> Engage: Send engagement request
+    Engage --> EngageUI: Confirm engagement
+    EngageUI -> UI: Update UI (optimistic)
+end
+
+NotifyUI -> Notify: Poll for new notifications
+Notify --> NotifyUI: Return new notifications
+NotifyUI -> UI: Display new notifications
+
+UI -> Timeline: Periodically refresh timeline
+Timeline --> UI: Return updated data
+UI -> UI: Display updated content
+@enduml

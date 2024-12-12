@@ -1,0 +1,64 @@
+@startuml
+title X(Twitter) - Back-End Server Processing Flow
+
+|Authentication Service|
+start
+:Receive Login Request;
+:Validate Credentials;
+if (Credentials Valid?) then (yes)
+  :Generate \nAuthentication \nToken;
+  :Return Token \nto Client;
+else (no)
+  :Return \nAuthentication \nError;
+  stop
+endif
+
+|User Service|
+:Receive User \nData Request;
+:Fetch User Profile;
+:Return User Data;
+
+|Timeline \nService|
+:Receive \nTimeline \nRequest;
+:Fetch \nRecent Tweets;
+:Return \nTimeline Data;
+
+|Tweet Service|
+:Receive \nTweet/Reply \nSubmission;
+:Validate Content;
+if (Content Valid?) then (yes)
+  :Store Tweet \nin Database;
+  :Trigger \nFan-out Process;
+  :Return \nConfirmation \nto Client;
+else (no)
+  :Return \nValidation Error;
+  stop
+endif
+
+|Fan-out Service|
+:Distribute Tweet \nto \nFollowers' Timelines;
+:Update Caches;
+
+|Engagement \nService|
+:Receive \nEngagement \nRequest \n(Like/Retweet);
+:Update \nEngagement \nMetrics;
+:Store in Database;
+:Update Caches;
+:Return \nConfirmation \nto Client;
+
+|Notification Service|
+:Generate Notifications;
+fork
+  :Process \nMention \nNotifications;
+fork again
+  :Process \nLike \nNotifications;
+fork again
+  :Process \nRetweet \nNotifications;
+fork again
+  :Process \nReply \nNotifications;
+end fork
+:Store Notifications;
+:Prepare Notifications \nfor Client Polling;
+
+stop
+@enduml

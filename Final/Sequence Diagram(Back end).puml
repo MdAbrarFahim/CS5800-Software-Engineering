@@ -1,0 +1,49 @@
+@startuml
+participant "Authentication Service" as Auth
+participant "User Service" as User
+participant "Tweet Service" as Tweet
+participant "Timeline Service" as Timeline
+participant "Engagement Service" as Engage
+participant "Notification Service" as Notify
+participant "Fan-out Service" as Fanout
+database "Auth Database" as AuthDB
+database "Tweet Database" as TweetDB
+queue "Message Queue" as MQ
+
+-> Auth: Receive login request
+Auth -> AuthDB: Validate credentials
+Auth --> Auth: Generate auth token
+Auth --> : Return auth token
+
+-> User: Request user data
+User -> TweetDB: Fetch user profile
+User --> : Return user data
+
+-> Tweet: Receive tweet/reply submission
+Tweet -> Tweet: Validate content
+alt Content valid
+    Tweet -> TweetDB: Store tweet
+    Tweet -> MQ: Publish tweet event
+    MQ -> Fanout: Consume tweet event
+    Fanout -> TweetDB: Distribute to follower timelines
+    Fanout -> Timeline: Update caches
+    Tweet --> : Return confirmation to client
+else Content invalid
+    Tweet --> : Return validation error
+end
+
+-> Timeline: Request timeline data
+Timeline -> TweetDB: Fetch recent tweets
+Timeline --> : Return timeline data
+
+-> Engage: Receive engagement request (Like/Retweet)
+Engage -> TweetDB: Update engagement metrics
+Engage -> TweetDB: Store engagement
+Engage -> Timeline: Update caches
+Engage --> : Return confirmation to client
+
+-> Notify: Generate notifications
+Notify -> Notify: Process various notification types
+Notify -> TweetDB: Store notifications
+Notify --> : Prepare notifications for client polling
+@enduml
